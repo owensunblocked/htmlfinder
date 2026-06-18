@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Hub - Website HTML Fetcher</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --text: #c9d1d9;
+            --accent: #58a6ff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .beta-note {
+            background: #f0883e;
+            color: #0d1117;
+            text-align: center;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(240, 136, 62, 0.3);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #58a6ff, #8b949e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.1rem;
+        }
+        
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 14px 16px;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+        }
+        
+        button {
+            padding: 14px 28px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #1f6feb;
+            transform: translateY(-1px);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--accent);
+            color: var(--accent);
+            font-weight: 500;
+        }
+        
+        #result {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-height: 400px;
+            padding: 20px;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        
+        .preview {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            height: 600px;
+            overflow: hidden;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .status {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #8b949e;
+        }
+        
+        .error {
+            color: #f85149;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        
+        <!-- Beta Note -->
+        <div class="beta-note">
+            ⚠️ This tool is in <strong>BETA</strong> — Some websites may not load due to CORS restrictions or security policies.
+        </div>
+
+        <header>
+            <h1>GitHub Hub</h1>
+            <p class="subtitle">Fetch any website's full HTML source code</p>
+        </header>
+
+        <div class="card">
+            <div class="input-group">
+                <input type="url" id="urlInput" placeholder="https://example.com" value="https://example.com">
+                <button onclick="fetchHTML()">Fetch HTML</button>
+            </div>
+
+            <div class="status" id="status">Ready</div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="showTab(0)">Source Code</div>
+                <div class="tab" onclick="showTab(1)">Live Preview</div>
+            </div>
+
+            <!-- Source Tab -->
+            <div id="sourceTab">
+                <pre id="result">Enter a URL and click "Fetch HTML" to see the full source code.</pre>
+            </div>
+
+            <!-- Preview Tab -->
+            <div id="previewTab" style="display: none;">
+                <div class="preview">
+                    <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Client-side tool • BETA Version • CORS proxy powered by allorigins.win</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentTab = 0;
+
+        function showTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                t.classList.toggle('active', i === tab);
+            });
+            
+            document.getElementById('sourceTab').style.display = tab === 0 ? 'block' : 'none';
+            document.getElementById('previewTab').style.display = tab === 1 ? 'block' : 'none';
+        }
+
+        async function fetchHTML() {
+            const urlInput = document.getElementById('urlInput').value.trim();
+            const statusEl = document.getElementById('status');
+            const resultEl = document.getElementById('result');
+            const previewFrame = document.getElementById('previewFrame');
+
+            if (!urlInput) {
+                statusEl.innerHTML = '<span class="error">Please enter a valid URL</span>';
+                return;
+            }
+
+            let url = urlInput;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            statusEl.textContent = 'Fetching...';
+            resultEl.textContent = 'Loading...';
+
+            try {
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                const response = await fetch(proxyUrl);
+                
+                if (!response.ok) throw new Error('Failed to fetch');
+
+                const data = await response.json();
+                const html = data.contents || 'No content received';
+                
+                resultEl.textContent = html;
+                previewFrame.src = url;
+                
+                statusEl.innerHTML = `✅ Successfully fetched <strong>${url}</strong>`;
+                
+            } catch (error) {
+                try {
+                    const directResponse = await fetch(url);
+                    const html = await directResponse.text();
+                    resultEl.textContent = html;
+                    previewFrame.src = url;
+                    statusEl.innerHTML = `✅ Fetched (direct) <strong>${url}</strong>`;
+                } catch (directError) {
+                    resultEl.textContent = `❌ Could not fetch the website.\n\nError: ${error.message}\n\nMany websites block external access for security reasons.`;
+                    statusEl.innerHTML = `<span class="error">Failed to fetch</span>`;
+                }
+            }
+        }
+
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') fetchHTML();
+        });
+    </script>
+</body>
+</html>
